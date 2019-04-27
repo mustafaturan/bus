@@ -12,7 +12,7 @@ func init() {
 
 // ListHandlerKeys returns list of registered handler keys
 func ListHandlerKeys() []string {
-	keys := make([]string, 0)
+	var keys []string
 	for k := range handlers {
 		keys = append(keys, k)
 	}

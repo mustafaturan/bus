@@ -16,7 +16,7 @@ type Handler struct {
 
 // Subscriptions returns all subscriptions of the handler
 func (h *Handler) Subscriptions() []*Topic {
-	subscriptions := make([]*Topic, 0)
+	var subscriptions []*Topic
 	for _, t := range topics {
 		if matched, _ := regexp.MatchString(h.Matcher, t.Name); matched {
 			subscriptions = append(subscriptions, t)

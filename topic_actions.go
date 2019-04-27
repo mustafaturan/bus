@@ -12,7 +12,7 @@ func init() {
 
 // ListTopics list registered topics
 func ListTopics() []*Topic {
-	l := make([]*Topic, 0)
+	var l []*Topic
 	for _, t := range topics {
 		l = append(l, t)
 	}
