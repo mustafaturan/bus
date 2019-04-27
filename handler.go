@@ -4,7 +4,9 @@
 
 package bus
 
-import "regexp"
+import (
+	"regexp"
+)
 
 // Handler is a receiver for event reference with the given regex pattern
 type Handler struct {

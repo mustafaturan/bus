@@ -1,9 +1,10 @@
 package bus_test
 
 import (
+	"testing"
+
 	"github.com/mustafaturan/bus"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestListTopics(t *testing.T) {

@@ -2,9 +2,10 @@ package bus_test
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/mustafaturan/bus"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestConfigure(t *testing.T) {
