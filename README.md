@@ -24,6 +24,12 @@ unique id generation functionality. Here is a sample configuration using
 `monoton` id generator:
 
 ```go
+import (
+    "github.com/mustafaturan/bus"
+    "github.com/mustafaturan/monoton"
+    "github.com/mustafaturan/monoton/sequencer"
+)
+
 func init() {
     // configure id generator (it doesn't have to be monoton)
     node        := uint(1)
