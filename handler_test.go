@@ -15,5 +15,5 @@ func TestSubscriptions(t *testing.T) {
 	h := fakeHandler(".*")
 	bus.RegisterHandler("test.handler", &h)
 
-	assert.Equal(t, bus.ListTopics(), h.Subscriptions())
+	assert.ElementsMatch(t, bus.ListTopics(), h.Subscriptions())
 }
