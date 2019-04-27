@@ -18,7 +18,7 @@ func TestListHandlerKeys(t *testing.T) {
 	bus.RegisterHandler("test.key.2", &h)
 
 	want := []string{"test.key.1", "test.key.2"}
-	assert.Equal(t, want, bus.ListHandlerKeys())
+	assert.ElementsMatch(t, want, bus.ListHandlerKeys())
 }
 
 func TestRegisterHandler(t *testing.T) {

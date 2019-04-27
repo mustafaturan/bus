@@ -16,7 +16,7 @@ func TestListTopics(t *testing.T) {
 
 	bus.RegisterTopics(topicNames...)
 	topics := []*bus.Topic{fetchTopic("user.created"), fetchTopic("user.deleted")}
-	assert.Equal(t, topics, bus.ListTopics())
+	assert.ElementsMatch(t, topics, bus.ListTopics())
 }
 
 func TestRegisterTopics(t *testing.T) {
