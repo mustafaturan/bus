@@ -13,7 +13,7 @@ var b bus
 // Configure sets configuration for bus package
 func Configure(c Config) error {
 	if c.Next == nil {
-		return fmt.Errorf("Next() id generator func can't be nil")
+		return fmt.Errorf("bus: Next() id generator func can't be nil")
 	}
 
 	b = bus{next: c.Next}

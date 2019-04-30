@@ -1,7 +1,6 @@
 package bus_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/mustafaturan/bus"
@@ -16,8 +15,13 @@ func TestConfigure(t *testing.T) {
 		assert.Nil(t, bus.Configure(c))
 	})
 
-	t.Run("with valid generator", func(t *testing.T) {
+	t.Run("with invalid generator", func(t *testing.T) {
 		c := bus.Config{Next: nil}
-		assert.Error(t, fmt.Errorf("id generator func can't be nil"), bus.Configure(c))
+		err := bus.Configure(c)
+		assert.NotNil(t, err)
+		if assert.Error(t, err) {
+			want := "bus: Next() id generator func can't be nil"
+			assert.Equal(t, want, err.Error())
+		}
 	})
 }

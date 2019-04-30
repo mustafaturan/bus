@@ -42,6 +42,7 @@ func TestEmit(t *testing.T) {
 		assert := assert.New(t)
 		assert.Nil(e)
 		assert.NotNil(err)
+		assert.Equal("bus: topic(comment.updated) not found", err.Error())
 	})
 }
 

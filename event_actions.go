@@ -18,7 +18,7 @@ func Emit(topicName string, data interface{}, txID string) (*Event, error) {
 		return e, nil
 	}
 
-	return nil, fmt.Errorf("topic(%s) not found", topicName)
+	return nil, fmt.Errorf("bus: topic(%s) not found", topicName)
 }
 
 func newEvent(txID string, t *Topic, data interface{}) *Event {
