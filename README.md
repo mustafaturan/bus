@@ -1,4 +1,4 @@
-# Bus
+# 🔊 Bus
 
 [![Build Status](https://travis-ci.org/mustafaturan/bus.svg?branch=master)](https://travis-ci.org/mustafaturan/bus)
 [![Coverage Status](https://coveralls.io/repos/github/mustafaturan/bus/badge.svg?branch=master)](https://coveralls.io/github/mustafaturan/bus?branch=master)
