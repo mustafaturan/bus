@@ -4,6 +4,7 @@
 [![Coverage Status](https://coveralls.io/repos/github/mustafaturan/bus/badge.svg?branch=master)](https://coveralls.io/github/mustafaturan/bus?branch=master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/mustafaturan/bus)](https://goreportcard.com/report/github.com/mustafaturan/bus)
 [![GoDoc](https://godoc.org/github.com/mustafaturan/bus?status.svg)](https://godoc.org/github.com/mustafaturan/bus)
+[![GitHub license](https://img.shields.io/github/license/mustafaturan/bus.svg)](https://github.com/mustafaturan/bus/blob/master/LICENSE)
 
 Bus is a minimalist event/message bus implementation for internal communication.
 It is heavily inspired from my [event_bus](https://github.com/otobus/event_bus)
