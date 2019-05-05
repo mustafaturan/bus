@@ -94,6 +94,12 @@ When an event is emitted, the topic handlers will receive events with order. It
 is highly recommended to process events asynchronous. Package leave the decision
 to the packages/projects to use concurrency abstractions depending on use-cases.
 
+### Sample Project
+
+An [example simple project](https://github.com/mustafaturan/bus-sample-project)
+with two consumers which increments a counter for each event topic and printer
+consumer which prints all events.
+
 ## Contributing
 
 All contributors should follow [Contributing Guidelines](CONTRIBUTING.md) before creating pull requests.
