@@ -97,8 +97,9 @@ to the packages/projects to use concurrency abstractions depending on use-cases.
 ### Sample Project
 
 An [example simple project](https://github.com/mustafaturan/bus-sample-project)
-with two consumers which increments a counter for each event topic and printer
-consumer which prints all events.
+with three consumers which increments a `counter` for each event topic,
+`printer` consumer which prints all events and lastly `calculator` consumer
+which sums amounts.
 
 ## Contributing
 
