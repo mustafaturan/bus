@@ -101,6 +101,12 @@ with three consumers which increments a `counter` for each event topic,
 `printer` consumer which prints all events and lastly `calculator` consumer
 which sums amounts.
 
+### Benchmarks
+
+```
+BenchmarkEmit-8         10000000               158 ns/op              72 B/op          2 allocs/op
+```
+
 ## Contributing
 
 All contributors should follow [Contributing Guidelines](CONTRIBUTING.md) before creating pull requests.
