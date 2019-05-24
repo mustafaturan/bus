@@ -56,10 +56,10 @@ pattern.
 Example code:
 
 	handler := bus.Handler{
-		Handle: func(e *Event){
+		Handle: func(e *Event) {
 			// do something
 			// NOTE: Highly recommended to process the event in an async way
-		}),
+		},
 		Matcher: ".*", // matches all topics
 	}
 	bus.RegisterHandler("a unique key for the handler", &handler)
