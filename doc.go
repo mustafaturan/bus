@@ -81,9 +81,10 @@ Example code:
 
 Processing Events
 
-When an event is emitted, the topic handlers will receive events with order. It
-is highly recommended to process events asynchronous. Package leave the decision
-to the packages/projects to use concurrency abstractions depending on use-cases.
+When an event is emitted, the topic handlers will receive events synchronously.
+It is highly recommended to process events asynchronous. Package leave the
+decision to the packages/projects to use concurrency abstractions depending on
+use-cases.
 
 */
 package bus
