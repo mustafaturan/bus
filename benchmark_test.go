@@ -18,6 +18,8 @@ func BenchmarkEmit(b *testing.B) {
 	txID := "tx"
 	for n := 0; n < b.N; n++ {
 		data := n
-		bus.Emit(topic, data, txID)
+		if _, err := bus.Emit(topic, data, txID); err != nil {
+			panic(err)
+		}
 	}
 }

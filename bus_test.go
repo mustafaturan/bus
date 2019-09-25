@@ -6,7 +6,9 @@ import (
 
 func setup(topicNames ...string) {
 	fn := func() string { return "fakeid" }
-	bus.Configure(bus.Config{Next: fn})
+	if err := bus.Configure(bus.Config{Next: fn}); err != nil {
+		panic(err)
+	}
 	bus.RegisterTopics(topicNames...)
 }
 

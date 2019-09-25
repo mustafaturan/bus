@@ -33,7 +33,10 @@ func TestEmit(t *testing.T) {
 	t.Run("with handler", func(t *testing.T) {
 		registerHandler("test", t)
 
-		bus.Emit("comment.created", "my comment with handler", "tx")
+		_, err := bus.Emit("comment.created", "my comment with handler", "tx")
+		if err != nil {
+			t.Fatalf("emit failed: %v", err)
+		}
 		bus.DeregisterHandler("test")
 	})
 	t.Run("with unknown topic", func(t *testing.T) {

@@ -49,7 +49,5 @@ func deregisterTopic(topicName string) {
 	b.Lock()
 	defer b.Unlock()
 
-	if _, ok := topics[topicName]; ok {
-		delete(topics, topicName)
-	}
+	delete(topics, topicName)
 }
