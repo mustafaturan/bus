@@ -33,8 +33,8 @@ import (
 
 func init() {
     // configure id generator (it doesn't have to be monoton)
-    node        := uint(1)
-    initialTime := uint(0)
+    node        := uint64(1)
+    initialTime := uint64(0)
     monoton.Configure(sequencer.NewMillisecond(), node, initialTime)
 
     // configure bus
