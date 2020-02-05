@@ -57,7 +57,7 @@ const (
 	CtxKeyTxID = ctxKey("bus.txID")
 
 	// Version syncs with package version
-	Version = "1.0.0"
+	Version = "1.0.2"
 )
 
 // NewBus inits a new bus
@@ -86,11 +86,11 @@ func (b *Bus) Emit(ctx context.Context, topicName string, data interface{}) (*Ev
 
 // Topics lists the all registered topics
 func (b *Bus) Topics() []string {
-	topics := make([]string, len(b.topics))
-	i := 0
+	topics, index := make([]string, len(b.topics)), 0
+
 	for topicName := range b.topics {
-		topics[i] = topicName
-		i++
+		topics[index] = topicName
+		index++
 	}
 	return topics
 }
