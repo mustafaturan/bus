@@ -162,7 +162,7 @@ func (e *Event) Context() context.Context {
 	return e.ctx
 }
 
-// Generate is the implementation of IDGenerator for bus.Next fn type
+// Generate is an implementation of IDGenerator for bus.Next fn type
 func (n Next) Generate() string {
 	return n()
 }
