@@ -55,7 +55,7 @@ type topic struct {
 type ctxKey rune
 
 const (
-	// CtxKeyTxID tx id context key (intentionally blank)
+	// CtxKeyTxID tx id context key
 	CtxKeyTxID = ctxKey('B')
 
 	// Version syncs with package version
