@@ -52,14 +52,16 @@ type topic struct {
 	handlers []*Handler
 }
 
-type ctxKey string
+type ctxKey rune
 
 const (
 	// CtxKeyTxID tx id context key (intentionally blank)
-	CtxKeyTxID = ctxKey("")
+	CtxKeyTxID = ctxKey('B')
 
 	// Version syncs with package version
 	Version = "2.0.0"
+
+	empty = ""
 )
 
 // NewBus inits a new bus
@@ -212,7 +214,7 @@ func (b *Bus) newEvent(txID string, topicName string, data interface{}) *Event {
 		Data:       data,
 		OccurredAt: time.Now().UnixNano(),
 	}
-	if txID != "" {
+	if txID != empty {
 		e.TxID = txID
 	} else {
 		e.TxID = b.idgen.Generate()
