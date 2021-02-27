@@ -67,7 +67,7 @@ pattern.
 Example code:
 
 	handler := bus.Handler{
-		Handle: func(e *Event) {
+		Handle: func(ctx context.Context, e *Event) {
 			// do something
 			// NOTE: Highly recommended to process the event in an async way
 		},

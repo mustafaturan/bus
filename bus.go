@@ -59,7 +59,7 @@ const (
 	CtxKeyTxID = ctxKey('B')
 
 	// Version syncs with package version
-	Version = "2.0.3"
+	Version = "2.0.4"
 
 	empty = ""
 )
