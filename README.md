@@ -18,7 +18,7 @@ on the package for the version `2.x.x` except any bug fixes.
 ## Installation
 
 Via go packages:
-```go get github.com/mustafaturan/bus```
+```go get github.com/mustafaturan/bus/v2```
 
 ## Usage
 
