@@ -13,7 +13,7 @@ package for Elixir language.
 ## API
 
 The method names and arities/args are stable now. No change should be expected
-on the package for the version `1.x.x` except any bug fixes.
+on the package for the version `2.x.x` except any bug fixes.
 
 ## Installation
 
@@ -86,7 +86,7 @@ pattern.
 
 ```go
 handler := bus.Handler{
-    Handle: func(e *bus.Event) {
+    Handle: func(ctx context,Context, e *bus.Event) {
         // do something
         // NOTE: Highly recommended to process the event in an async way
     },
@@ -151,7 +151,14 @@ which prints all events and lastly `calculator` consumer which sums amounts.
 ### Benchmarks
 
 ```
-BenchmarkEmit-4   	 5983903	       200 ns/op	     104 B/op	       2 allocs/op
+BenchmarkEmit-4   	 5666227	       206 ns/op	      88 B/op	       1 allocs/op
+```
+
+Computer specs:
+
+```
+Processor: 2.9 GHz Dual-Core Intel Core i5
+Memory: 8 GB 2133 MHz LPDDR3
 ```
 
 ## Contributing
@@ -166,7 +173,7 @@ All contributors should follow [Contributing Guidelines](CONTRIBUTING.md) before
 
 Apache License 2.0
 
-Copyright (c) 2020 Mustafa Turan
+Copyright (c) 2021 Mustafa Turan
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in

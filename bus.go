@@ -30,7 +30,6 @@ type IDGenerator interface {
 
 // Event is data structure for any logs
 type Event struct {
-	ctx        context.Context
 	ID         string      // identifier
 	TxID       string      // transaction identifier
 	Topic      string      // topic name
@@ -40,8 +39,11 @@ type Event struct {
 
 // Handler is a receiver for event reference with the given regex pattern
 type Handler struct {
-	Handle  func(e *Event) // handler func to process events
-	Matcher string         // topic matcher as regex pattern
+	// handler func to process events
+	Handle func(ctx context.Context, e *Event)
+
+	// topic matcher as regex pattern
+	Matcher string
 }
 
 // topic structure
@@ -53,11 +55,11 @@ type topic struct {
 type ctxKey string
 
 const (
-	// CtxKeyTxID tx id context key
-	CtxKeyTxID = ctxKey("bus.txID")
+	// CtxKeyTxID tx id context key (intentionally blank)
+	CtxKeyTxID = ctxKey("")
 
 	// Version syncs with package version
-	Version = "1.0.2"
+	Version = "2.0.0"
 )
 
 // NewBus inits a new bus
@@ -79,8 +81,9 @@ func (b *Bus) Emit(ctx context.Context, topicName string, data interface{}) (*Ev
 		return nil, fmt.Errorf("bus: topic(%s) not found", topicName)
 	}
 
-	e := b.newEvent(ctx, topicName, data)
-	b.emit(e)
+	txID, _ := ctx.Value(CtxKeyTxID).(string)
+	e := b.newEvent(txID, topicName, data)
+	b.emit(ctx, e)
 	return e, nil
 }
 
@@ -157,11 +160,6 @@ func (b *Bus) DeregisterHandler(key string) {
 	b.deregisterHandler(key)
 }
 
-// Context returns event's context
-func (e *Event) Context() context.Context {
-	return e.ctx
-}
-
 // Generate is an implementation of IDGenerator for bus.Next fn type
 func (n Next) Generate() string {
 	return n()
@@ -207,16 +205,14 @@ func (b *Bus) deregisterTopicHandler(t *topic, h *Handler) {
 	}
 }
 
-func (b *Bus) newEvent(ctx context.Context, topicName string, data interface{}) *Event {
+func (b *Bus) newEvent(txID string, topicName string, data interface{}) *Event {
 	e := &Event{
-		ctx:        ctx,
 		ID:         b.idgen.Generate(),
 		Topic:      topicName,
 		Data:       data,
 		OccurredAt: time.Now().UnixNano(),
 	}
-	val := ctx.Value(CtxKeyTxID)
-	if txID, ok := val.(string); ok {
+	if txID != "" {
 		e.TxID = txID
 	} else {
 		e.TxID = b.idgen.Generate()
@@ -224,9 +220,9 @@ func (b *Bus) newEvent(ctx context.Context, topicName string, data interface{}) 
 	return e
 }
 
-func (b *Bus) emit(e *Event) {
+func (b *Bus) emit(ctx context.Context, e *Event) {
 	for _, h := range b.topics[e.Topic].handlers {
-		h.Handle(e)
+		h.Handle(ctx, e)
 	}
 }
 

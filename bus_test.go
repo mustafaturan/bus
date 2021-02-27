@@ -15,11 +15,11 @@ import (
 )
 
 func TestCtxKeyTxID(t *testing.T) {
-	assert.EqualValues(t, bus.CtxKeyTxID, "bus.txID")
+	assert.EqualValues(t, bus.CtxKeyTxID, "")
 }
 
 func TestVersion(t *testing.T) {
-	assert.Equal(t, bus.Version, "1.0.2")
+	assert.Equal(t, bus.Version, "2.0.0")
 }
 
 func TestNew(t *testing.T) {
@@ -52,7 +52,6 @@ func TestEmit(t *testing.T) {
 		e, err := b.Emit(ctx, "comment.deleted", "my comment")
 
 		assert := assert.New(t)
-		assert.Equal(ctx, e.Context())
 		assert.Equal("tx", e.TxID)
 		assert.Equal("fakeid", e.ID)
 		assert.Equal("comment.deleted", e.Topic)
@@ -235,14 +234,13 @@ func tearDown(b *bus.Bus, topicNames ...string) {
 }
 
 func fakeHandler(matcher string) bus.Handler {
-	return bus.Handler{Handle: func(*bus.Event) {}, Matcher: matcher}
+	return bus.Handler{Handle: func(context.Context, *bus.Event) {}, Matcher: matcher}
 }
 
 func registerFakeHandler(b *bus.Bus, key string, t *testing.T) {
-	fn := func(e *bus.Event) {
+	fn := func(ctx context.Context, e *bus.Event) {
 		t.Run("receives right event", func(t *testing.T) {
 			assert := assert.New(t)
-			assert.NotNil(e.Context())
 			assert.Equal("fakeid", e.ID)
 			assert.Equal("comment.created", e.Topic)
 			assert.Equal("my comment with handler", e.Data)
