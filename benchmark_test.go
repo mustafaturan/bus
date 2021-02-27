@@ -8,7 +8,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/mustafaturan/bus"
+	"github.com/mustafaturan/bus/v2"
 )
 
 func BenchmarkEmit(b *testing.B) {

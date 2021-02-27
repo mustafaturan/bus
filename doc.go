@@ -18,7 +18,7 @@ Here is a sample initilization using `monoton` id generator:
 Example code for configuration:
 
 	import (
-		"github.com/mustafaturan/bus"
+		"github.com/mustafaturan/bus/v2"
 		"github.com/mustafaturan/monoton"
 		"github.com/mustafaturan/monoton/sequencer"
 	)

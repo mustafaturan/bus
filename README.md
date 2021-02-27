@@ -39,7 +39,7 @@ Here is a sample initilization using `monoton` id generator:
 
 ```go
 import (
-    "github.com/mustafaturan/bus"
+    "github.com/mustafaturan/bus/v2"
     "github.com/mustafaturan/monoton"
     "github.com/mustafaturan/monoton/sequencer"
 )
@@ -151,14 +151,11 @@ which prints all events and lastly `calculator` consumer which sums amounts.
 ### Benchmarks
 
 ```
-BenchmarkEmit-4   	 5666227	       206 ns/op	      88 B/op	       1 allocs/op
-```
-
-Computer specs:
-
-```
-Processor: 2.9 GHz Dual-Core Intel Core i5
-Memory: 8 GB 2133 MHz LPDDR3
+goos: darwin
+goarch: amd64
+pkg: github.com/mustafaturan/bus/v2
+cpu: Intel(R) Core(TM) i5-6267U CPU @ 2.90GHz
+BenchmarkEmit-4   	 5323320	       220.8 ns/op	      88 B/op	       1 allocs/op
 ```
 
 ## Contributing
