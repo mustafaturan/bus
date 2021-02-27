@@ -15,7 +15,7 @@ import (
 )
 
 func TestCtxKeyTxID(t *testing.T) {
-	assert.EqualValues(t, bus.CtxKeyTxID, "")
+	assert.EqualValues(t, bus.CtxKeyTxID, rune(66))
 }
 
 func TestVersion(t *testing.T) {
