@@ -14,14 +14,43 @@ import (
 func BenchmarkEmit(b *testing.B) {
 	b.ReportAllocs()
 
-	topic := "order.created"
+	const (
+		txID       = "BENCHMARK"
+		topic      = "order.created"
+		handlerKey = "test.bench.handler"
+	)
+
 	ebus := setup(topic)
 	defer tearDown(ebus, topic)
+
 	h := fakeHandler(topic)
-	ebus.RegisterHandler("test.bench.handler", &h)
+	ebus.RegisterHandler(handlerKey, &h)
 
 	ctx := context.Background()
-	ctx = context.WithValue(ctx, bus.CtxKeyTxID, "BENCHMARK")
+	ctx = context.WithValue(ctx, bus.CtxKeyTxID, txID)
+	for n := 0; n < b.N; n++ {
+		data := n
+		if _, err := ebus.Emit(ctx, topic, data); err != nil {
+			panic(err)
+		}
+	}
+}
+
+func BenchmarkEmitWithoutTxID(b *testing.B) {
+	b.ReportAllocs()
+
+	const (
+		topic      = "order.created"
+		handlerKey = "test.bench.handler"
+	)
+
+	ebus := setup(topic)
+	defer tearDown(ebus, topic)
+
+	h := fakeHandler(topic)
+	ebus.RegisterHandler(handlerKey, &h)
+
+	ctx := context.Background()
 	for n := 0; n < b.N; n++ {
 		data := n
 		if _, err := ebus.Emit(ctx, topic, data); err != nil {

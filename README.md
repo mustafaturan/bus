@@ -86,7 +86,7 @@ pattern.
 
 ```go
 handler := bus.Handler{
-    Handle: func(ctx context,Context, e *bus.Event) {
+    Handle: func(ctx context.Context, e *bus.Event) {
         // do something
         // NOTE: Highly recommended to process the event in an async way
     },
@@ -150,12 +150,23 @@ which prints all events and lastly `calculator` consumer which sums amounts.
 
 ### Benchmarks
 
+When txID specified in the context:
 ```
 goos: darwin
 goarch: amd64
 pkg: github.com/mustafaturan/bus/v2
 cpu: Intel(R) Core(TM) i5-6267U CPU @ 2.90GHz
-BenchmarkEmit-4   	 5323320	       220.8 ns/op	      88 B/op	       1 allocs/op
+BenchmarkEmit-4   	 5315254	       205.7 ns/op	      88 B/op	       1 allocs/op
+```
+
+When txID is not specified in the context (the library generates and assigns
+txID to the context and the event):
+```
+goos: darwin
+goarch: amd64
+pkg: github.com/mustafaturan/bus/v2
+cpu: Intel(R) Core(TM) i5-6267U CPU @ 2.90GHz
+BenchmarkEmitWithoutTxID-4   	 4044715	       285.2 ns/op	     152 B/op	       3 allocs/op
 ```
 
 ## Contributing

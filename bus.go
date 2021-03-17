@@ -52,14 +52,14 @@ type topic struct {
 	handlers []*Handler
 }
 
-type ctxKey rune
+type ctxKey int8
 
 const (
 	// CtxKeyTxID tx id context key
-	CtxKeyTxID = ctxKey('B')
+	CtxKeyTxID = ctxKey(116)
 
 	// Version syncs with package version
-	Version = "2.0.4"
+	Version = "2.1.0"
 
 	empty = ""
 )
@@ -84,7 +84,18 @@ func (b *Bus) Emit(ctx context.Context, topicName string, data interface{}) (*Ev
 	}
 
 	txID, _ := ctx.Value(CtxKeyTxID).(string)
-	e := b.newEvent(txID, topicName, data)
+	if txID == empty {
+		txID = b.idgen.Generate()
+		ctx = context.WithValue(ctx, CtxKeyTxID, txID)
+	}
+
+	e := &Event{
+		ID:         b.idgen.Generate(),
+		Topic:      topicName,
+		Data:       data,
+		OccurredAt: time.Now().UnixNano(),
+		TxID:       txID,
+	}
 	b.emit(ctx, e)
 	return e, nil
 }
@@ -205,21 +216,6 @@ func (b *Bus) deregisterTopicHandler(t *topic, h *Handler) {
 			break
 		}
 	}
-}
-
-func (b *Bus) newEvent(txID string, topicName string, data interface{}) *Event {
-	e := &Event{
-		ID:         b.idgen.Generate(),
-		Topic:      topicName,
-		Data:       data,
-		OccurredAt: time.Now().UnixNano(),
-	}
-	if txID != empty {
-		e.TxID = txID
-	} else {
-		e.TxID = b.idgen.Generate()
-	}
-	return e
 }
 
 func (b *Bus) emit(ctx context.Context, e *Event) {

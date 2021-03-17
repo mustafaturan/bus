@@ -15,11 +15,11 @@ import (
 )
 
 func TestCtxKeyTxID(t *testing.T) {
-	assert.EqualValues(t, bus.CtxKeyTxID, rune(66))
+	assert.EqualValues(t, bus.CtxKeyTxID, 116)
 }
 
 func TestVersion(t *testing.T) {
-	assert.Equal(t, bus.Version, "2.0.4")
+	assert.Equal(t, bus.Version, "2.1.0")
 }
 
 func TestNew(t *testing.T) {
