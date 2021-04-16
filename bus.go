@@ -12,54 +12,58 @@ import (
 	"time"
 )
 
-// Bus is a message bus
-type Bus struct {
-	sync.Mutex
-	idgen    IDGenerator
-	topics   map[string]*topic
-	handlers map[string]*Handler
-}
+type (
+	// Bus is a message bus
+	Bus struct {
+		mutex    sync.RWMutex
+		idgen    Next
+		topics   map[string][]Handler
+		handlers map[string]Handler
+	}
 
-// Next is a sequential unique id generator func type
-type Next func() string
+	// Next is a sequential unique id generator func type
+	Next func() string
 
-// IDGenerator is a sequential unique id generator interface
-type IDGenerator interface {
-	Generate() string
-}
+	// IDGenerator is a sequential unique id generator interface
+	IDGenerator interface {
+		Generate() string
+	}
 
-// Event is data structure for any logs
-type Event struct {
-	ID         string      // identifier
-	TxID       string      // transaction identifier
-	Topic      string      // topic name
-	Data       interface{} // actual event data
-	OccurredAt int64       // creation time in nanoseconds
-}
+	// Event is data structure for any logs
+	Event struct {
+		ID         string      // identifier
+		TxID       string      // transaction identifier
+		Topic      string      // topic name
+		Source     string      // source of the event
+		OccurredAt time.Time   // creation time in nanoseconds
+		Data       interface{} // actual event data
+	}
 
-// Handler is a receiver for event reference with the given regex pattern
-type Handler struct {
-	// handler func to process events
-	Handle func(ctx context.Context, e *Event)
+	// Handler is a receiver for event reference with the given regex pattern
+	Handler struct {
+		key string
 
-	// topic matcher as regex pattern
-	Matcher string
-}
+		// handler func to process events
+		Handle func(ctx context.Context, e Event)
 
-// topic structure
-type topic struct {
-	name     string
-	handlers []*Handler
-}
+		// topic matcher as regex pattern
+		Matcher string
+	}
 
-type ctxKey int8
+	EventOption = func(Event) Event
+
+	ctxKey int8
+)
 
 const (
 	// CtxKeyTxID tx id context key
 	CtxKeyTxID = ctxKey(116)
 
+	// CtxKeySource source context key
+	CtxKeySource = ctxKey(117)
+
 	// Version syncs with package version
-	Version = "2.1.0"
+	Version = "3.0.0"
 
 	empty = ""
 )
@@ -71,67 +75,165 @@ func NewBus(g IDGenerator) (*Bus, error) {
 	}
 
 	return &Bus{
-		idgen:    g,
-		topics:   make(map[string]*topic),
-		handlers: make(map[string]*Handler),
+		idgen:    g.Generate,
+		topics:   make(map[string][]Handler),
+		handlers: make(map[string]Handler),
 	}, nil
 }
 
-// Emit inits a new event and delivers to the interested in handlers
-func (b *Bus) Emit(ctx context.Context, topicName string, data interface{}) (*Event, error) {
-	if _, ok := b.topics[topicName]; !ok {
-		return nil, fmt.Errorf("bus: topic(%s) not found", topicName)
+// WithID returns an option to set event's id field
+func WithID(id string) EventOption {
+	return func(e Event) Event {
+		e.ID = id
+		return e
+	}
+}
+
+// WithTxID returns an option to set event's txID field
+func WithTxID(txID string) EventOption {
+	return func(e Event) Event {
+		e.TxID = txID
+		return e
+	}
+}
+
+// WithSource returns an option to set event's source field
+func WithSource(source string) EventOption {
+	return func(e Event) Event {
+		e.Source = source
+		return e
+	}
+}
+
+// WithSource returns an option to set event's occurredAt field
+func WithOccurredAt(time time.Time) EventOption {
+	return func(e Event) Event {
+		e.OccurredAt = time
+		return e
+	}
+}
+
+// Emit inits a new event and delivers to the interested in handlers with
+// sync safety
+func (b *Bus) Emit(ctx context.Context, topic string, data interface{}) error {
+	b.mutex.RLock()
+	handlers, ok := b.topics[topic]
+	b.mutex.RUnlock()
+
+	if !ok {
+		return fmt.Errorf("bus: topic(%s) not found", topic)
 	}
 
+	source, _ := ctx.Value(CtxKeySource).(string)
 	txID, _ := ctx.Value(CtxKeyTxID).(string)
 	if txID == empty {
-		txID = b.idgen.Generate()
+		txID = b.idgen()
 		ctx = context.WithValue(ctx, CtxKeyTxID, txID)
 	}
 
-	e := &Event{
-		ID:         b.idgen.Generate(),
-		Topic:      topicName,
+	e := Event{
+		ID:         b.idgen(),
+		Topic:      topic,
 		Data:       data,
-		OccurredAt: time.Now().UnixNano(),
+		OccurredAt: time.Now(),
 		TxID:       txID,
+		Source:     source,
 	}
-	b.emit(ctx, e)
-	return e, nil
+
+	for _, h := range handlers {
+		h.Handle(ctx, e)
+	}
+
+	return nil
+}
+
+// EmitWithOpts inits a new event and delivers to the interested in handlers
+// with sync safety and options
+func (b *Bus) EmitWithOpts(ctx context.Context, topic string, data interface{}, opts ...EventOption) error {
+	b.mutex.RLock()
+	handlers, ok := b.topics[topic]
+	b.mutex.RUnlock()
+
+	if !ok {
+		return fmt.Errorf("bus: topic(%s) not found", topic)
+	}
+
+	e := Event{Topic: topic, Data: data}
+	for _, o := range opts {
+		e = o(e)
+	}
+
+	if e.TxID == empty {
+		e.TxID = b.idgen()
+	}
+	if e.ID == empty {
+		e.ID = b.idgen()
+	}
+	if e.OccurredAt.IsZero() {
+		e.OccurredAt = time.Now()
+	}
+
+	for _, h := range handlers {
+		h.Handle(ctx, e)
+	}
+
+	return nil
 }
 
 // Topics lists the all registered topics
 func (b *Bus) Topics() []string {
+	b.mutex.RLock()
+	defer b.mutex.RUnlock()
+
 	topics, index := make([]string, len(b.topics)), 0
 
-	for topicName := range b.topics {
-		topics[index] = topicName
+	for topic := range b.topics {
+		topics[index] = topic
 		index++
 	}
 	return topics
 }
 
 // RegisterTopics registers topics and fullfills handlers
-func (b *Bus) RegisterTopics(topicNames ...string) {
-	for _, n := range topicNames {
+func (b *Bus) RegisterTopics(topics ...string) {
+	b.mutex.Lock()
+	defer b.mutex.Unlock()
+
+	for _, n := range topics {
 		b.registerTopic(n)
 	}
 }
 
 // DeregisterTopics deletes topic
-func (b *Bus) DeregisterTopics(topicNames ...string) {
-	for _, n := range topicNames {
+func (b *Bus) DeregisterTopics(topics ...string) {
+	b.mutex.Lock()
+	defer b.mutex.Unlock()
+
+	for _, n := range topics {
 		b.deregisterTopic(n)
 	}
 }
 
-// TopicHandlers returns all handlers for the topic
-func (b *Bus) TopicHandlers(topicName string) []*Handler {
-	return b.topics[topicName].handlers
+// TopicHandlerKeys returns all handlers for the topic
+func (b *Bus) TopicHandlerKeys(topic string) []string {
+	b.mutex.RLock()
+	handlers := b.topics[topic]
+	b.mutex.RUnlock()
+
+	keys := make([]string, len(handlers))
+
+	for i, h := range handlers {
+		keys[i] = h.key
+	}
+
+	return keys
 }
 
 // HandlerKeys returns list of registered handler keys
 func (b *Bus) HandlerKeys() []string {
+	b.mutex.RLock()
+	defer b.mutex.RUnlock()
+
 	keys, index := make([]string, len(b.handlers)), 0
 
 	for k := range b.handlers {
@@ -143,32 +245,25 @@ func (b *Bus) HandlerKeys() []string {
 
 // HandlerTopicSubscriptions returns all topic subscriptions of the handler
 func (b *Bus) HandlerTopicSubscriptions(handlerKey string) []string {
-	var subscriptions []string
-	h, ok := b.handlers[handlerKey]
-	if !ok {
-		return subscriptions
-	}
+	b.mutex.RLock()
+	defer b.mutex.RUnlock()
 
-	for _, t := range b.topics {
-		if matched, _ := regexp.MatchString(h.Matcher, t.name); matched {
-			subscriptions = append(subscriptions, t.name)
-		}
-	}
-	return subscriptions
+	return b.handlerTopicSubscriptions(handlerKey)
 }
 
 // RegisterHandler re/register the handler to the registry
-func (b *Bus) RegisterHandler(key string, h *Handler) {
-	b.Lock()
-	defer b.Unlock()
+func (b *Bus) RegisterHandler(key string, h Handler) {
+	b.mutex.Lock()
+	defer b.mutex.Unlock()
 
-	b.registerHandler(key, h)
+	h.key = key
+	b.registerHandler(h)
 }
 
 // DeregisterHandler deletes handler from the registry
 func (b *Bus) DeregisterHandler(key string) {
-	b.Lock()
-	defer b.Unlock()
+	b.mutex.Lock()
+	defer b.mutex.Unlock()
 
 	b.deregisterHandler(key)
 }
@@ -178,67 +273,71 @@ func (n Next) Generate() string {
 	return n()
 }
 
-func (b *Bus) registerHandler(key string, h *Handler) {
-	b.deregisterHandler(key)
-	b.handlers[key] = h
-	for _, t := range b.HandlerTopicSubscriptions(key) {
-		b.registerTopicHandler(b.topics[t], h)
+func (b *Bus) registerHandler(h Handler) {
+	b.deregisterHandler(h.key)
+	b.handlers[h.key] = h
+	for _, t := range b.handlerTopicSubscriptions(h.key) {
+		b.registerTopicHandler(t, h)
 	}
 }
 
 func (b *Bus) deregisterHandler(handlerKey string) {
-	if h, ok := b.handlers[handlerKey]; ok {
-		for _, t := range b.HandlerTopicSubscriptions(handlerKey) {
-			b.deregisterTopicHandler(b.topics[t], h)
+	if _, ok := b.handlers[handlerKey]; ok {
+		for _, t := range b.handlerTopicSubscriptions(handlerKey) {
+			b.deregisterTopicHandler(t, handlerKey)
 		}
 		delete(b.handlers, handlerKey)
 	}
 }
 
-func (b *Bus) registerTopicHandlers(t *topic) {
-	for _, h := range b.handlers {
-		if matched, _ := regexp.MatchString(h.Matcher, t.name); matched {
-			b.registerTopicHandler(t, h)
-		}
-	}
+func (b *Bus) registerTopicHandler(topic string, h Handler) {
+	b.topics[topic] = append(b.topics[topic], h)
 }
 
-func (b *Bus) registerTopicHandler(t *topic, h *Handler) {
-	t.handlers = append(t.handlers, h)
-}
-
-func (b *Bus) deregisterTopicHandler(t *topic, h *Handler) {
-	for i, handler := range t.handlers {
-		if handler == h {
-			t.handlers[i] = t.handlers[len(t.handlers)-1]
-			t.handlers[len(t.handlers)-1] = nil
-			t.handlers = t.handlers[:len(t.handlers)-1]
+func (b *Bus) deregisterTopicHandler(topic, handlerKey string) {
+	l := len(b.topics[topic])
+	for i, h := range b.topics[topic] {
+		if h.key == handlerKey {
+			b.topics[topic][i] = b.topics[topic][l-1]
+			b.topics[topic] = b.topics[topic][:l-1]
 			break
 		}
 	}
 }
 
-func (b *Bus) emit(ctx context.Context, e *Event) {
-	for _, h := range b.topics[e.Topic].handlers {
-		h.Handle(ctx, e)
-	}
-}
-
-func (b *Bus) registerTopic(topicName string) {
-	b.Lock()
-	defer b.Unlock()
-
-	if _, ok := b.topics[topicName]; ok {
+func (b *Bus) registerTopic(topic string) {
+	if _, ok := b.topics[topic]; ok {
 		return
 	}
-	t := &topic{name: topicName, handlers: []*Handler{}}
-	b.registerTopicHandlers(t)
-	b.topics[topicName] = t
+
+	b.topics[topic] = b.buildHandlers(topic)
 }
 
-func (b *Bus) deregisterTopic(topicName string) {
-	b.Lock()
-	defer b.Unlock()
+func (b *Bus) deregisterTopic(topic string) {
+	delete(b.topics, topic)
+}
 
-	delete(b.topics, topicName)
+func (b *Bus) buildHandlers(topic string) []Handler {
+	handlers := make([]Handler, 0)
+	for _, h := range b.handlers {
+		if matched, _ := regexp.MatchString(h.Matcher, topic); matched {
+			handlers = append(handlers, h)
+		}
+	}
+	return handlers
+}
+
+func (b *Bus) handlerTopicSubscriptions(handlerKey string) []string {
+	var subscriptions []string
+	h, ok := b.handlers[handlerKey]
+	if !ok {
+		return subscriptions
+	}
+
+	for topic := range b.topics {
+		if matched, _ := regexp.MatchString(h.Matcher, topic); matched {
+			subscriptions = append(subscriptions, topic)
+		}
+	}
+	return subscriptions
 }
