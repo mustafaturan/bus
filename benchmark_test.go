@@ -7,8 +7,9 @@ package bus_test
 import (
 	"context"
 	"testing"
+	"time"
 
-	"github.com/mustafaturan/bus/v2"
+	"github.com/mustafaturan/bus/v3"
 )
 
 func BenchmarkEmit(b *testing.B) {
@@ -18,21 +19,19 @@ func BenchmarkEmit(b *testing.B) {
 		txID       = "BENCHMARK"
 		topic      = "order.created"
 		handlerKey = "test.bench.handler"
+		source     = "source"
 	)
 
 	ebus := setup(topic)
 	defer tearDown(ebus, topic)
 
 	h := fakeHandler(topic)
-	ebus.RegisterHandler(handlerKey, &h)
+	ebus.RegisterHandler(handlerKey, h)
 
-	ctx := context.Background()
-	ctx = context.WithValue(ctx, bus.CtxKeyTxID, txID)
+	ctx := context.WithValue(context.Background(), bus.CtxKeyTxID, txID)
+	ctx = context.WithValue(ctx, bus.CtxKeySource, source)
 	for n := 0; n < b.N; n++ {
-		data := n
-		if _, err := ebus.Emit(ctx, topic, data); err != nil {
-			panic(err)
-		}
+		_ = ebus.Emit(ctx, topic, n)
 	}
 }
 
@@ -48,13 +47,59 @@ func BenchmarkEmitWithoutTxID(b *testing.B) {
 	defer tearDown(ebus, topic)
 
 	h := fakeHandler(topic)
-	ebus.RegisterHandler(handlerKey, &h)
+	ebus.RegisterHandler(handlerKey, h)
 
 	ctx := context.Background()
 	for n := 0; n < b.N; n++ {
-		data := n
-		if _, err := ebus.Emit(ctx, topic, data); err != nil {
-			panic(err)
-		}
+		_ = ebus.Emit(ctx, topic, n)
+	}
+}
+
+func BenchmarkEmitWithOpts(b *testing.B) {
+	b.ReportAllocs()
+
+	const (
+		topic      = "order.created"
+		handlerKey = "test.bench.handler"
+	)
+
+	ebus := setup(topic)
+	defer tearDown(ebus, topic)
+
+	h := fakeHandler(topic)
+	ebus.RegisterHandler(handlerKey, h)
+
+	ctx := context.Background()
+	now := time.Now()
+	for n := 0; n < b.N; n++ {
+		_ = ebus.EmitWithOpts(
+			ctx,
+			topic,
+			n,
+			bus.WithTxID("tx"),
+			bus.WithSource("source"),
+			bus.WithID("id"),
+			bus.WithOccurredAt(now),
+		)
+	}
+}
+
+func BenchmarkEmitWithOptsUnspecified(b *testing.B) {
+	b.ReportAllocs()
+
+	const (
+		topic      = "order.created"
+		handlerKey = "test.bench.handler"
+	)
+
+	ebus := setup(topic)
+	defer tearDown(ebus, topic)
+
+	h := fakeHandler(topic)
+	ebus.RegisterHandler(handlerKey, h)
+
+	ctx := context.Background()
+	for n := 0; n < b.N; n++ {
+		_ = ebus.EmitWithOpts(ctx, topic, n)
 	}
 }

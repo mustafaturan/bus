@@ -67,13 +67,13 @@ pattern.
 Example code:
 
 	handler := bus.Handler{
-		Handle: func(ctx context.Context, e *Event) {
+		Handle: func(ctx context.Context, e Event) {
 			// do something
 			// NOTE: Highly recommended to process the event in an async way
 		},
 		Matcher: ".*", // matches all topics
 	}
-	b.RegisterHandler("a unique key for the handler", &handler)
+	b.RegisterHandler("a unique key for the handler", handler)
 
 Emit Event
 
@@ -93,16 +93,19 @@ Example code:
 	order["currency"]    = "USD"
 
 	// emit the event
-	event, err := b.Emit(ctx, topic, order)
+	err := b.Emit(ctx, topic, order)
 
 	if err != nil {
 		// report the err
 		fmt.Println(err)
 	}
 
-	// in case of need to do anything with event on caller, a ref is also
-	// returning on `Emit` call.
-	fmt.Println(event)
+	// emit an event with opts
+	err := b.EmitWithOpts(ctx, topic, order, bus.WithTxID("tx-id-val"))
+	if err != nil {
+		// report the err
+		fmt.Println(err)
+	}
 
 Processing Events
 

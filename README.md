@@ -18,7 +18,7 @@ on the package for the version `2.x.x` except any bug fixes.
 ## Installation
 
 Via go packages:
-```go get github.com/mustafaturan/bus/v2```
+```go get github.com/mustafaturan/bus/v3```
 
 ## Usage
 
@@ -39,7 +39,7 @@ Here is a sample initilization using `monoton` id generator:
 
 ```go
 import (
-    "github.com/mustafaturan/bus/v2"
+    "github.com/mustafaturan/bus/v3"
     "github.com/mustafaturan/monoton"
     "github.com/mustafaturan/monoton/sequencer"
 )
@@ -86,13 +86,13 @@ pattern.
 
 ```go
 handler := bus.Handler{
-    Handle: func(ctx context.Context, e *bus.Event) {
+    Handle: func(ctx context.Context, e bus.Event) {
         // do something
         // NOTE: Highly recommended to process the event in an async way
     },
     Matcher: ".*", // matches all topics
 }
-b.RegisterHandler("a unique key for the handler", &handler)
+b.RegisterHandler("a unique key for the handler", handler)
 ```
 
 ### Emit Events
@@ -101,6 +101,8 @@ b.RegisterHandler("a unique key for the handler", &handler)
 // if txID val is blank, bus package generates one using the id generator
 ctx := context.Background()
 ctx = context.WithValue(ctx, bus.CtxKeyTxID, "some-transaction-id-if-exists")
+// with optional source
+ctx = context.WithValue(ctx, bus.CtxKeySource, "source-of-the-event")
 
 // event topic name (must be registered before)
 topic := "order.received"
@@ -112,16 +114,20 @@ order["orderAmount"] = "112.20"
 order["currency"]    = "USD"
 
 // emit the event
-event, err := b.Emit(ctx, topic, order)
+err := b.Emit(ctx, topic, order)
 
 if err != nil {
     // report the err
     fmt.Println(err)
 }
 
-// if the caller needs the event, a ref for the event is returning as result of
-// the `Emit` call.
-fmt.Println(event)
+// emit the event with options
+err := b.EmitWithOpts(ctx, topic, order, bus.WithTxID("some-tx-id"))
+
+if err != nil {
+    // report the err
+    fmt.Println(err)
+}
 ```
 
 ### Processing Events
@@ -134,11 +140,12 @@ use-cases. Each handlers receive the same event as ref of `bus.Event` struct:
 ```go
 // Event data structure
 type Event struct {
-	ID         string      // identifier
-	TxID       string      // transaction identifier
-	Topic      string      // topic name
-	Data       interface{} // actual event data
-	OccurredAt int64       // creation time in nanoseconds
+    ID         string      // identifier
+    TxID       string      // transaction identifier
+    Topic      string      // topic name
+    Source     string      // source of the event
+    OccurredAt time.Time   // creation time in nanoseconds
+    Data       interface{} // actual event data
 }
 ```
 
@@ -150,23 +157,23 @@ which prints all events and lastly `calculator` consumer which sums amounts.
 
 ### Benchmarks
 
-When txID specified in the context:
+Command:
 ```
-goos: darwin
-goarch: amd64
-pkg: github.com/mustafaturan/bus/v2
-cpu: Intel(R) Core(TM) i5-6267U CPU @ 2.90GHz
-BenchmarkEmit-4   	 5315254	       205.7 ns/op	      88 B/op	       1 allocs/op
+go test -benchtime 10000000x -benchmem -run=^$ -bench=. github.com/mustafaturan/bus/v3
 ```
 
-When txID is not specified in the context (the library generates and assigns
-txID to the context and the event):
+Results:
 ```
 goos: darwin
 goarch: amd64
-pkg: github.com/mustafaturan/bus/v2
+pkg: github.com/mustafaturan/bus/v3
 cpu: Intel(R) Core(TM) i5-6267U CPU @ 2.90GHz
-BenchmarkEmitWithoutTxID-4   	 4044715	       285.2 ns/op	     152 B/op	       3 allocs/op
+BenchmarkEmit-4                      	10000000	       180.5 ns/op	       8 B/op	       0 allocs/op
+BenchmarkEmitWithoutTxID-4           	10000000	       244.6 ns/op	      72 B/op	       2 allocs/op
+BenchmarkEmitWithOpts-4              	10000000	       280.8 ns/op	     112 B/op	       4 allocs/op
+BenchmarkEmitWithOptsUnspecified-4   	10000000	       169.4 ns/op	       8 B/op	       0 allocs/op
+PASS
+ok  	github.com/mustafaturan/bus/v3	8.884s
 ```
 
 ## Contributing
