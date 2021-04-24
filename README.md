@@ -13,7 +13,7 @@ package for Elixir language.
 ## API
 
 The method names and arities/args are stable now. No change should be expected
-on the package for the version `2.x.x` except any bug fixes.
+on the package for the version `3.x.x` except any bug fixes.
 
 ## Installation
 

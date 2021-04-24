@@ -50,6 +50,7 @@ type (
 		Matcher string
 	}
 
+	// EventOption is a function type to mutate event fields
 	EventOption = func(Event) Event
 
 	ctxKey int8
@@ -105,7 +106,7 @@ func WithSource(source string) EventOption {
 	}
 }
 
-// WithSource returns an option to set event's occurredAt field
+// WithOccurredAt returns an option to set event's occurredAt field
 func WithOccurredAt(time time.Time) EventOption {
 	return func(e Event) Event {
 		e.OccurredAt = time
