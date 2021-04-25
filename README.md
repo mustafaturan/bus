@@ -40,8 +40,8 @@ Here is a sample initilization using `monoton` id generator:
 ```go
 import (
     "github.com/mustafaturan/bus/v3"
-    "github.com/mustafaturan/monoton"
-    "github.com/mustafaturan/monoton/sequencer"
+    "github.com/mustafaturan/monoton/v2"
+    "github.com/mustafaturan/monoton/v2/sequencer"
 )
 
 func NewBus() *bus.Bus {
@@ -54,7 +54,7 @@ func NewBus() *bus.Bus {
     }
 
     // init an id generator
-    var idGenerator bus.Next = (*m).Next
+    var idGenerator bus.Next = m.Next
 
     // create a new bus instance
     b, err := bus.NewBus(idGenerator)
