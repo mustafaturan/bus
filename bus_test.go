@@ -28,7 +28,7 @@ func TestCtxKeyTxID(t *testing.T) {
 }
 
 func TestVersion(t *testing.T) {
-	assert.Equal(t, bus.Version, "3.0.0")
+	assert.Equal(t, bus.Version, "3.0.3")
 }
 
 func TestNew(t *testing.T) {
